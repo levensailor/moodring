@@ -5,7 +5,12 @@ export async function uploadImage(file: File): Promise<string> {
     throw new Error("BLOB_READ_WRITE_TOKEN is not set");
   }
 
-  const blob = await put(file.name, file, {
+  const safeName =
+    file.name && file.name.trim().length > 0
+      ? file.name
+      : `paste-${Date.now()}.png`;
+
+  const blob = await put(safeName, file, {
     access: "public",
     token: process.env.BLOB_READ_WRITE_TOKEN,
   });
