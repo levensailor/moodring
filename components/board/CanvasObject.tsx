@@ -1,14 +1,15 @@
 "use client";
 
-// #region agent log
-typeof window !== 'undefined' && fetch('http://127.0.0.1:7243/ingest/bf7a940b-ce5c-4f62-a6a1-89abf5ceb79b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CanvasObject.tsx:4',message:'Importing react-konva components',data:{env:typeof window!=='undefined'?'browser':'server'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-// #endregion
 import { useState, useRef } from "react";
 import { Group, Image, Text, Rect, Circle, Line, Arrow, Transformer } from "react-konva";
 import { Icon } from "@iconify/react";
 import { BoardItem, UpdateBoardItemInput } from "@/types";
 import useImage from "use-image";
 import Konva from "konva";
+
+// #region agent log
+typeof window !== 'undefined' && fetch('http://127.0.0.1:7243/ingest/bf7a940b-ce5c-4f62-a6a1-89abf5ceb79b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CanvasObject.tsx:11',message:'All imports completed',data:{Group:typeof Group,Image:typeof Image,env:typeof window!=='undefined'?'browser':'server'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+// #endregion
 
 interface CanvasObjectProps {
   item: BoardItem;
