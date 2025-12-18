@@ -342,17 +342,17 @@ function SubboardSelector({
   return (
     <div className="space-y-2 max-h-64 overflow-y-auto">
       {filteredBoards.length === 0 ? (
-        <p className="text-sm text-gray-400">No other boards available</p>
+        <p className="text-sm text-slate-600">No other boards available</p>
       ) : (
         filteredBoards.map((board: Board) => (
           <button
             key={board.id}
             onClick={() => onSelect(board.id)}
-            className="w-full text-left p-3 rounded-lg border border-white/20 hover:bg-white/10 transition-colors"
+            className="w-full text-left p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
           >
-            <div className="font-medium text-white">{board.title}</div>
+            <div className="font-medium text-slate-900">{board.title}</div>
             {board.description && (
-              <div className="text-sm text-gray-400">{board.description}</div>
+              <div className="text-sm text-slate-600">{board.description}</div>
             )}
           </button>
         ))
@@ -385,7 +385,7 @@ function BackgroundSettings({
   return (
     <div className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-slate-700 mb-2">
           Background Color
         </label>
         <div className="flex gap-2">
@@ -405,7 +405,7 @@ function BackgroundSettings({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-slate-700 mb-2">
           Transparency: {Math.round(transparency * 100)}%
         </label>
         <input
@@ -415,12 +415,12 @@ function BackgroundSettings({
           step="0.01"
           value={transparency}
           onChange={(e) => setTransparency(parseFloat(e.target.value))}
-          className="w-full"
+          className="w-full accent-slate-900"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-slate-700 mb-2">
           Wallpaper Pattern
         </label>
         <div className="grid grid-cols-4 gap-2">
@@ -431,10 +431,10 @@ function BackgroundSettings({
               className={`p-3 rounded-lg border-2 transition-all ${
                 wallpaper === pattern
                   ? "border-blue-500 bg-blue-500/20"
-                  : "border-white/20 hover:border-white/40"
+                  : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
               }`}
             >
-              <div className="text-xs text-white">
+              <div className="text-xs text-slate-700">
                 {pattern || "None"}
               </div>
             </button>

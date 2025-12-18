@@ -123,3 +123,35 @@ export async function PUT(
   }
 }
 
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const body: { itemId?: string } = await request.json().catch(() => ({}));
+    const itemId = body.itemId;
+
+    if (!itemId) {
+      return NextResponse.json({ error: "itemId is required" }, { status: 400 });
+    }
+
+    const [deleted] = await sql`
+      DELETE FROM board_items
+      WHERE id = ${itemId} AND board_id = ${params.id}
+      RETURNING *
+    `;
+
+    if (!deleted) {
+      return NextResponse.json({ error: "Board item not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting board item:", error);
+    return NextResponse.json(
+      { error: "Failed to delete board item" },
+      { status: 500 }
+    );
+  }
+}
+

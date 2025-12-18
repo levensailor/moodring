@@ -105,6 +105,46 @@ export default function BoardPage() {
     },
   });
 
+  const deleteItemMutation = useMutation({
+    mutationFn: async (itemId: string) => {
+      const response = await fetch(`/api/boards/${boardId}/items`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId }),
+      });
+      if (!response.ok) throw new Error("Failed to delete item");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["board-items", boardId] });
+    },
+  });
+
+  useEffect(() => {
+    const shouldIgnoreKey = () => {
+      const el = document.activeElement as HTMLElement | null;
+      if (!el) return false;
+      const tag = el.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select") return true;
+      if (el.isContentEditable) return true;
+      return false;
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Delete" && e.key !== "Backspace") return;
+      if (!selectedItemId) return;
+      if (shouldIgnoreKey()) return;
+
+      e.preventDefault();
+      deleteItemMutation.mutate(selectedItemId);
+      setSelectedItemId(null);
+      setEditingTextItemId(null);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedItemId, deleteItemMutation]);
+
   const handleAddText = (x: number, y: number) => {
     createItemMutation.mutate({
       board_id: boardId,
