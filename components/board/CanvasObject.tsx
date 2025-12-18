@@ -199,7 +199,7 @@ function LinkObject({ item }: { item: BoardItem }) {
           width={item.width - 20}
           text={content.description}
           fontSize={12}
-          fill="#666666"}
+          fill="#666666"
         />
       )}
     </Group>
