@@ -17,16 +17,38 @@ const nextConfig = {
       const path = require('path');
       const crypto = require('crypto');
       const target = path.join(process.cwd(), 'components', 'board', 'CanvasObject.tsx');
+      const vercelMeta = {
+        VERCEL_GIT_COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA,
+        VERCEL_GIT_COMMIT_REF: process.env.VERCEL_GIT_COMMIT_REF,
+        VERCEL_ENV: process.env.VERCEL_ENV,
+      };
       if (fs.existsSync(target)) {
         const src = fs.readFileSync(target, 'utf8');
         const hash = crypto.createHash('sha1').update(src).digest('hex').slice(0, 12);
         const hasOldTypo = src.includes('fill=\"#666666\"}');
-        console.log('[moodring][debug][CanvasObject.tsx]', { isServer, hash, hasOldTypo, bytes: src.length });
+        const idx = src.indexOf('fill=\"#666666\"');
+        const excerpt =
+          idx >= 0 ? src.slice(Math.max(0, idx - 20), Math.min(src.length, idx + 40)) : null;
+        console.log('[moodring][debug][CanvasObject.tsx]', {
+          isServer,
+          hash,
+          hasOldTypo,
+          bytes: src.length,
+          fillIdx: idx,
+          excerpt,
+          ...vercelMeta,
+        });
       } else {
-        console.log('[moodring][debug][CanvasObject.tsx]', { isServer, missing: true });
+        console.log('[moodring][debug][CanvasObject.tsx]', { isServer, missing: true, ...vercelMeta });
       }
     } catch (e) {
-      console.log('[moodring][debug][CanvasObject.tsx]', { isServer, error: String(e?.message || e) });
+      console.log('[moodring][debug][CanvasObject.tsx]', {
+        isServer,
+        error: String(e?.message || e),
+        VERCEL_GIT_COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA,
+        VERCEL_GIT_COMMIT_REF: process.env.VERCEL_GIT_COMMIT_REF,
+        VERCEL_ENV: process.env.VERCEL_ENV,
+      });
     }
     // #endregion
 
