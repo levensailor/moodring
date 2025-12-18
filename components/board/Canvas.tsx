@@ -90,7 +90,24 @@ export function Canvas({
       // #region agent log
       const itemTypes = clipboardItems ? Array.from(clipboardItems).map((it) => it.type) : [];
       const fileTypes = files ? Array.from(files).map((f) => f.type) : [];
-      fetch('http://127.0.0.1:7243/ingest/bf7a940b-ce5c-4f62-a6a1-89abf5ceb79b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'paste-run1',hypothesisId:'P1',location:'Canvas.tsx:paste',message:'paste event',data:{itemTypes,fileTypes,filesCount:files?.length||0,pointerPos},timestamp:Date.now()})}).catch(()=>{});
+      const shouldIngest =
+        typeof window !== "undefined" &&
+        (window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1");
+      shouldIngest &&
+        fetch("http://127.0.0.1:7243/ingest/bf7a940b-ce5c-4f62-a6a1-89abf5ceb79b", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: "debug-session",
+            runId: "paste-run1",
+            hypothesisId: "P1",
+            location: "Canvas.tsx:paste",
+            message: "paste event",
+            data: { itemTypes, fileTypes, filesCount: files?.length || 0, pointerPos },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
       console.info("[moodring][paste]", { itemTypes, fileTypes, filesCount: files?.length || 0, pointerPos });
       // #endregion
 
@@ -108,7 +125,26 @@ export function Canvas({
             });
             const data = await response.json().catch(() => ({}));
             // #region agent log
-            fetch('http://127.0.0.1:7243/ingest/bf7a940b-ce5c-4f62-a6a1-89abf5ceb79b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'paste-run1',hypothesisId:'P2',location:'Canvas.tsx:pasteFiles',message:'upload response',data:{status:response.status,ok:response.ok,hasUrl:!!data?.url,fileType:imageFile.type,fileName:imageFile.name||''},timestamp:Date.now()})}).catch(()=>{});
+            shouldIngest &&
+              fetch("http://127.0.0.1:7243/ingest/bf7a940b-ce5c-4f62-a6a1-89abf5ceb79b", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  sessionId: "debug-session",
+                  runId: "paste-run1",
+                  hypothesisId: "P2",
+                  location: "Canvas.tsx:pasteFiles",
+                  message: "upload response",
+                  data: {
+                    status: response.status,
+                    ok: response.ok,
+                    hasUrl: !!data?.url,
+                    fileType: imageFile.type,
+                    fileName: imageFile.name || "",
+                  },
+                  timestamp: Date.now(),
+                }),
+              }).catch(() => {});
             console.info("[moodring][paste][upload]", { status: response.status, ok: response.ok, hasUrl: !!data?.url, fileType: imageFile.type, fileName: imageFile.name || "" });
             // #endregion
             if (data.url) {
@@ -138,7 +174,26 @@ export function Canvas({
                 });
                 const data = await response.json().catch(() => ({}));
                 // #region agent log
-                fetch('http://127.0.0.1:7243/ingest/bf7a940b-ce5c-4f62-a6a1-89abf5ceb79b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'paste-run1',hypothesisId:'P3',location:'Canvas.tsx:pasteItems',message:'upload response',data:{status:response.status,ok:response.ok,hasUrl:!!data?.url,fileType:file.type,fileName:file.name||''},timestamp:Date.now()})}).catch(()=>{});
+                shouldIngest &&
+                  fetch("http://127.0.0.1:7243/ingest/bf7a940b-ce5c-4f62-a6a1-89abf5ceb79b", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      sessionId: "debug-session",
+                      runId: "paste-run1",
+                      hypothesisId: "P3",
+                      location: "Canvas.tsx:pasteItems",
+                      message: "upload response",
+                      data: {
+                        status: response.status,
+                        ok: response.ok,
+                        hasUrl: !!data?.url,
+                        fileType: file.type,
+                        fileName: file.name || "",
+                      },
+                      timestamp: Date.now(),
+                    }),
+                  }).catch(() => {});
                 console.info("[moodring][paste][upload]", { status: response.status, ok: response.ok, hasUrl: !!data?.url, fileType: file.type, fileName: file.name || "" });
                 // #endregion
                 if (data.url) {
