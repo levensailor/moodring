@@ -106,7 +106,7 @@ export function BoardGrid({ onCreateClick }: BoardGridProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-white/60">Loading boards...</div>
+        <div className="text-slate-600">Loading boards...</div>
       </div>
     );
   }
@@ -126,11 +126,11 @@ export function BoardGrid({ onCreateClick }: BoardGridProps) {
           ))}
           <LiquidGlassCard
             onClick={onCreateClick}
-            className="h-48 flex items-center justify-center cursor-pointer border-dashed border-2 border-white/30 hover:border-white/50"
+            className="h-48 flex items-center justify-center cursor-pointer border-dashed border-2 border-slate-300 hover:border-slate-400"
           >
             <div className="flex flex-col items-center gap-2">
-              <Plus className="w-12 h-12 text-white/60" />
-              <span className="text-white/60 font-medium">New Board</span>
+              <Plus className="w-12 h-12 text-slate-500" />
+              <span className="text-slate-700 font-medium">New Board</span>
             </div>
           </LiquidGlassCard>
         </div>

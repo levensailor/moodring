@@ -273,7 +273,7 @@ export default function BoardPage() {
   if (!board) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-white/60">Loading board...</div>
+        <div className="text-slate-600">Loading board...</div>
       </div>
     );
   }
@@ -287,7 +287,7 @@ export default function BoardPage() {
     : { x: 0, y: 0 };
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-gray-900">
+    <div className="relative w-full h-screen overflow-hidden bg-slate-50">
       <Canvas
         width={canvasSize.width}
         height={canvasSize.height}

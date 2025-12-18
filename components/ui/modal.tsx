@@ -39,22 +39,22 @@ export function Modal({
       onClick={onClose}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm" />
 
       {/* Modal */}
       <div
         className={cn(
           "relative z-50 w-full max-w-md mx-4",
-          "bg-white/10 backdrop-blur-md rounded-2xl",
-          "border border-white/20 shadow-2xl",
+          "bg-white/80 backdrop-blur-md rounded-2xl",
+          "border border-slate-200 shadow-2xl",
           className
         )}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between p-6 border-b border-white/10">
-            <h2 className="text-xl font-semibold text-white">{title}</h2>
+          <div className="flex items-center justify-between p-6 border-b border-slate-200">
+            <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
             <Button
               variant="ghost"
               size="sm"

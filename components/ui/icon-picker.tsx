@@ -73,21 +73,21 @@ export function IconPicker({ selectedIcon, onSelect }: IconPickerProps) {
             onClick={() => onSelect(icon)}
             className={cn(
               "p-2 rounded-lg border-2 transition-all",
-              "hover:bg-white/10 hover:scale-110",
+              "hover:bg-slate-100 hover:scale-110",
               selectedIcon === icon
                 ? "border-blue-500 bg-blue-500/20"
                 : "border-transparent"
             )}
           >
-            <Icon icon={icon} className="w-6 h-6" />
+            <Icon icon={icon} className="w-6 h-6 text-slate-700" />
           </button>
         ))}
       </div>
       {selectedIcon && (
-        <div className="flex items-center gap-2 p-2 bg-white/5 rounded-lg">
-          <span className="text-sm text-gray-400">Selected:</span>
-          <Icon icon={selectedIcon} className="w-5 h-5" />
-          <span className="text-sm text-gray-300">{selectedIcon}</span>
+        <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg border border-slate-200">
+          <span className="text-sm text-slate-500">Selected:</span>
+          <Icon icon={selectedIcon} className="w-5 h-5 text-slate-700" />
+          <span className="text-sm text-slate-700">{selectedIcon}</span>
         </div>
       )}
     </div>

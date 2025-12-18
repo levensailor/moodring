@@ -19,13 +19,13 @@ export function BoardCard({ board }: BoardCardProps) {
     >
       <div className="flex-1 flex flex-col items-center justify-center gap-3">
         {board.icon && (
-          <Icon icon={board.icon} className="w-12 h-12 text-white/80" />
+          <Icon icon={board.icon} className="w-12 h-12 text-slate-700" />
         )}
-        <h3 className="text-lg font-semibold text-white text-center">
+        <h3 className="text-lg font-semibold text-slate-900 text-center">
           {board.title}
         </h3>
         {board.description && (
-          <p className="text-sm text-white/60 text-center line-clamp-2">
+          <p className="text-sm text-slate-600 text-center line-clamp-2">
             {board.description}
           </p>
         )}

@@ -115,7 +115,7 @@ export function Toolbar({
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/10 backdrop-blur-md border-t border-white/20">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-t border-slate-200">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center gap-2 overflow-x-auto">
             <Button
@@ -127,7 +127,7 @@ export function Toolbar({
               <ArrowLeft className="w-4 h-4" />
             </Button>
 
-            <div className="w-px h-6 bg-white/20 mx-1" />
+            <div className="w-px h-6 bg-slate-200 mx-1" />
 
             <Button
               variant="ghost"
@@ -201,7 +201,7 @@ export function Toolbar({
               <Folder className="w-4 h-4" />
             </Button>
 
-            <div className="w-px h-6 bg-white/20 mx-1" />
+            <div className="w-px h-6 bg-slate-200 mx-1" />
 
             <Button
               variant="ghost"

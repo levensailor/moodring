@@ -14,13 +14,13 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(
           "inline-flex items-center justify-center rounded-md text-sm font-medium",
           "transition-colors focus-visible:outline-none focus-visible:ring-2",
-          "focus-visible:ring-white/50 focus-visible:ring-offset-2",
+          "focus-visible:ring-slate-400/60 focus-visible:ring-offset-2",
           "disabled:pointer-events-none disabled:opacity-50",
           {
-            "bg-white/10 text-white hover:bg-white/20": variant === "default",
-            "border border-white/20 bg-transparent hover:bg-white/10":
+            "bg-slate-900 text-white hover:bg-slate-800": variant === "default",
+            "border border-slate-200 bg-white/60 text-slate-900 hover:bg-white":
               variant === "outline",
-            "hover:bg-white/10": variant === "ghost",
+            "text-slate-700 hover:bg-slate-100": variant === "ghost",
             "h-10 px-4 py-2": size === "default",
             "h-9 px-3 text-xs": size === "sm",
             "h-11 px-8": size === "lg",

@@ -89,7 +89,7 @@ export function TextEditor({
 
   return (
     <div
-      className="absolute z-50 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 shadow-lg p-4"
+      className="absolute z-50 bg-white/85 backdrop-blur-md rounded-lg border border-slate-200 shadow-lg p-4"
       style={{
         left: position.x,
         top: position.y + item.height + 10,
@@ -101,17 +101,17 @@ export function TextEditor({
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Enter text"
-          className="bg-white/5"
+          className="bg-white"
         />
 
         <div className="flex items-center gap-2">
           <select
             value={fontFamily}
             onChange={(e) => setFontFamily(e.target.value)}
-            className="flex-1 h-9 rounded-md border border-white/20 bg-white/5 px-3 text-sm text-white"
+            className="flex-1 h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900"
           >
             {FONT_FAMILIES.map((font) => (
-              <option key={font} value={font} className="bg-gray-800">
+              <option key={font} value={font} className="bg-white">
                 {font}
               </option>
             ))}
@@ -123,14 +123,14 @@ export function TextEditor({
             onChange={(e) => setFontSize(parseInt(e.target.value) || 16)}
             min="8"
             max="200"
-            className="w-20 bg-white/5"
+            className="w-20 bg-white"
           />
 
           <Input
             type="color"
             value={color}
             onChange={(e) => setColor(e.target.value)}
-            className="w-12 h-9 bg-white/5"
+            className="w-12 h-9 bg-white"
           />
         </div>
 

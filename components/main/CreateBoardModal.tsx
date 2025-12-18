@@ -59,7 +59,7 @@ export function CreateBoardModal({
     <Modal isOpen={isOpen} onClose={onClose} title="Create New Mood Board">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
             Title <span className="text-red-400">*</span>
           </label>
           <Input
@@ -72,7 +72,7 @@ export function CreateBoardModal({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
             Description
           </label>
           <Textarea
@@ -84,7 +84,7 @@ export function CreateBoardModal({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
             Icon
           </label>
           <IconPicker selectedIcon={icon} onSelect={setIcon} />
