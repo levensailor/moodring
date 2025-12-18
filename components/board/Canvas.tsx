@@ -78,9 +78,9 @@ export function Canvas({
       if (!stage) return;
 
       const dt = e.clipboardData;
-      const items = dt?.items;
+      const clipboardItems = dt?.items;
       const files = dt?.files;
-      if (!items && (!files || files.length === 0)) return;
+      if (!clipboardItems && (!files || files.length === 0)) return;
 
       const pointerPos = stage.getPointerPosition() ?? {
         x: stage.width() / 2,
@@ -88,7 +88,7 @@ export function Canvas({
       };
 
       // #region agent log
-      const itemTypes = items ? Array.from(items).map((it) => it.type) : [];
+      const itemTypes = clipboardItems ? Array.from(clipboardItems).map((it) => it.type) : [];
       const fileTypes = files ? Array.from(files).map((f) => f.type) : [];
       fetch('http://127.0.0.1:7243/ingest/bf7a940b-ce5c-4f62-a6a1-89abf5ceb79b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'paste-run1',hypothesisId:'P1',location:'Canvas.tsx:paste',message:'paste event',data:{itemTypes,fileTypes,filesCount:files?.length||0,pointerPos},timestamp:Date.now()})}).catch(()=>{});
       console.info("[moodring][paste]", { itemTypes, fileTypes, filesCount: files?.length || 0, pointerPos });
@@ -123,33 +123,35 @@ export function Canvas({
         }
       }
 
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        if (item.type.indexOf("image") !== -1) {
-          const file = item.getAsFile();
-          if (file) {
-            const formData = new FormData();
-            formData.append("file", file);
-            try {
-              const response = await fetch("/api/images", {
-                method: "POST",
-                body: formData,
-              });
-              const data = await response.json().catch(() => ({}));
-              // #region agent log
-              fetch('http://127.0.0.1:7243/ingest/bf7a940b-ce5c-4f62-a6a1-89abf5ceb79b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'paste-run1',hypothesisId:'P3',location:'Canvas.tsx:pasteItems',message:'upload response',data:{status:response.status,ok:response.ok,hasUrl:!!data?.url,fileType:file.type,fileName:file.name||''},timestamp:Date.now()})}).catch(()=>{});
-              console.info("[moodring][paste][upload]", { status: response.status, ok: response.ok, hasUrl: !!data?.url, fileType: file.type, fileName: file.name || "" });
-              // #endregion
-              if (data.url) {
-                onPasteImage(data.url, pointerPos.x, pointerPos.y);
-              } else {
-                console.error("[moodring][paste] upload succeeded but no url returned", data);
+      if (clipboardItems) {
+        for (let i = 0; i < clipboardItems.length; i++) {
+          const item = clipboardItems[i];
+          if (item.type.indexOf("image") !== -1) {
+            const file = item.getAsFile();
+            if (file) {
+              const formData = new FormData();
+              formData.append("file", file);
+              try {
+                const response = await fetch("/api/images", {
+                  method: "POST",
+                  body: formData,
+                });
+                const data = await response.json().catch(() => ({}));
+                // #region agent log
+                fetch('http://127.0.0.1:7243/ingest/bf7a940b-ce5c-4f62-a6a1-89abf5ceb79b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'paste-run1',hypothesisId:'P3',location:'Canvas.tsx:pasteItems',message:'upload response',data:{status:response.status,ok:response.ok,hasUrl:!!data?.url,fileType:file.type,fileName:file.name||''},timestamp:Date.now()})}).catch(()=>{});
+                console.info("[moodring][paste][upload]", { status: response.status, ok: response.ok, hasUrl: !!data?.url, fileType: file.type, fileName: file.name || "" });
+                // #endregion
+                if (data.url) {
+                  onPasteImage(data.url, pointerPos.x, pointerPos.y);
+                } else {
+                  console.error("[moodring][paste] upload succeeded but no url returned", data);
+                }
+              } catch (error) {
+                console.error("Failed to upload image:", error);
               }
-            } catch (error) {
-              console.error("Failed to upload image:", error);
             }
+            return;
           }
-          return;
         }
       }
 
