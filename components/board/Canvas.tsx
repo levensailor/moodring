@@ -35,6 +35,7 @@ export function Canvas({
   onPasteLink,
   background,
 }: CanvasProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -222,8 +223,16 @@ export function Canvas({
       }
     };
 
-    window.addEventListener("paste", handlePaste);
-    return () => window.removeEventListener("paste", handlePaste);
+    // Attach to document so paste works even when no specific element is focused.
+    document.addEventListener("paste", handlePaste);
+    // Also attach to the container when possible.
+    const el = containerRef.current;
+    if (el) el.addEventListener("paste", handlePaste as any);
+
+    return () => {
+      document.removeEventListener("paste", handlePaste);
+      if (el) el.removeEventListener("paste", handlePaste as any);
+    };
   }, [onPasteImage, onPasteLink]);
 
   // Handle double click for text
@@ -263,6 +272,10 @@ export function Canvas({
   return (
     <div
       className="canvas-container"
+      ref={containerRef}
+      tabIndex={0}
+      onMouseDown={() => containerRef.current?.focus()}
+      onTouchStart={() => containerRef.current?.focus()}
       style={{
         width,
         height,
