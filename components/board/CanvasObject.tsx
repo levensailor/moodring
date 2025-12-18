@@ -2,7 +2,6 @@
 
 import React, { useState, useRef } from "react";
 import { Group, Image, Text, Rect, Circle, Line, Arrow, Transformer } from "react-konva";
-import { Icon } from "@iconify/react";
 import { BoardItem, UpdateBoardItemInput } from "@/types";
 import useImage from "use-image";
 import Konva from "konva";
@@ -208,13 +207,36 @@ function LinkObject({ item }: { item: BoardItem }) {
 
 function IconObject({ item }: { item: BoardItem }) {
   const content = item.content;
-  // For icons, we'll render them as SVG paths or use a library
-  // For now, using a simple circle placeholder
+  const icon = typeof content.icon === "string" ? content.icon : "";
+  const color = typeof content.color === "string" ? content.color : "#0f172a";
+
+  const url = getIconifySvgUrl(icon, color);
+  const [image] = useImage(url, "anonymous");
+
+  if (!icon) {
+    return (
+      <Rect
+        width={item.width}
+        height={item.height}
+        fill="#e2e8f0"
+        cornerRadius={8}
+      />
+    );
+  }
+
   return (
-    <Circle
-      radius={Math.min(item.width, item.height) / 2}
-      fill={content.color || "#3b82f6"}
-    />
+    <Group>
+      {!image ? (
+        <Rect
+          width={item.width}
+          height={item.height}
+          fill="#e2e8f0"
+          cornerRadius={8}
+        />
+      ) : (
+        <Image image={image} width={item.width} height={item.height} />
+      )}
+    </Group>
   );
 }
 
@@ -295,5 +317,18 @@ function SubboardObject({ item }: { item: BoardItem }) {
       />
     </Group>
   );
+}
+
+function getIconifySvgUrl(icon: string, color: string) {
+  // Iconify CDN format: https://api.iconify.design/{prefix}/{name}.svg?color=%23RRGGBB
+  // Example icon: "mdi:heart" => "mdi/heart"
+  const [prefix, name] = icon.includes(":") ? icon.split(":", 2) : ["", icon];
+  const safePrefix = encodeURIComponent(prefix);
+  const safeName = encodeURIComponent(name);
+  const safeColor = encodeURIComponent(color);
+
+  if (!safePrefix || !safeName) return "";
+
+  return `https://api.iconify.design/${safePrefix}/${safeName}.svg?color=${safeColor}`;
 }
 
