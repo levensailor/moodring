@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { Group, Image, Text, Rect, Circle, Line, Arrow, Transformer } from "react-konva";
 import { Icon } from "@iconify/react";
 import { BoardItem, UpdateBoardItemInput } from "@/types";

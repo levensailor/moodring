@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { Stage, Layer, Transformer } from "react-konva";
 import { BoardItem } from "@/types";
 import { CanvasObject } from "./CanvasObject";
