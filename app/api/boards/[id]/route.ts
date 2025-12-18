@@ -31,48 +31,39 @@ export async function PUT(
 ) {
   try {
     const body: UpdateBoardInput = await request.json();
-    const updates: string[] = [];
-    const values: any[] = [];
+    const hasAnyUpdate =
+      body.title !== undefined ||
+      body.description !== undefined ||
+      body.icon !== undefined ||
+      body.background_color !== undefined ||
+      body.background_transparency !== undefined ||
+      body.background_wallpaper !== undefined;
 
-    if (body.title !== undefined) {
-      updates.push(`title = $${values.length + 1}`);
-      values.push(body.title);
-    }
-    if (body.description !== undefined) {
-      updates.push(`description = $${values.length + 1}`);
-      values.push(body.description);
-    }
-    if (body.icon !== undefined) {
-      updates.push(`icon = $${values.length + 1}`);
-      values.push(body.icon);
-    }
-    if (body.background_color !== undefined) {
-      updates.push(`background_color = $${values.length + 1}`);
-      values.push(body.background_color);
-    }
-    if (body.background_transparency !== undefined) {
-      updates.push(`background_transparency = $${values.length + 1}`);
-      values.push(body.background_transparency);
-    }
-    if (body.background_wallpaper !== undefined) {
-      updates.push(`background_wallpaper = $${values.length + 1}`);
-      values.push(body.background_wallpaper);
-    }
-
-    if (updates.length === 0) {
+    if (!hasAnyUpdate) {
       return NextResponse.json({ error: "No updates provided" }, { status: 400 });
     }
 
-    values.push(params.id);
+    const title = body.title ?? null;
+    const description = body.description ?? null;
+    const icon = body.icon ?? null;
+    const backgroundColor = body.background_color ?? null;
+    const backgroundTransparency = body.background_transparency ?? null;
+    const backgroundWallpaper =
+      body.background_wallpaper !== undefined ? body.background_wallpaper : null;
 
-    const query = `
+    const [board] = await sql`
       UPDATE boards
-      SET ${updates.join(", ")}, updated_at = NOW()
-      WHERE id = $${values.length}
+      SET
+        title = COALESCE(${title}, title),
+        description = COALESCE(${description}, description),
+        icon = COALESCE(${icon}, icon),
+        background_color = COALESCE(${backgroundColor}, background_color),
+        background_transparency = COALESCE(${backgroundTransparency}, background_transparency),
+        background_wallpaper = COALESCE(${backgroundWallpaper}, background_wallpaper),
+        updated_at = NOW()
+      WHERE id = ${params.id}
       RETURNING *
     `;
-
-    const [board] = await sql.unsafe(query, values);
 
     if (!board) {
       return NextResponse.json({ error: "Board not found" }, { status: 404 });

@@ -70,56 +70,41 @@ export async function PUT(
       await request.json();
     const { itemId, updates } = body;
 
-    const updateFields: string[] = [];
-    const values: any[] = [];
+    const hasAnyUpdate =
+      updates.position_x !== undefined ||
+      updates.position_y !== undefined ||
+      updates.width !== undefined ||
+      updates.height !== undefined ||
+      updates.rotation !== undefined ||
+      updates.z_index !== undefined ||
+      updates.content !== undefined;
 
-    if (updates.position_x !== undefined) {
-      updateFields.push(`position_x = $${values.length + 1}`);
-      values.push(updates.position_x);
-    }
-    if (updates.position_y !== undefined) {
-      updateFields.push(`position_y = $${values.length + 1}`);
-      values.push(updates.position_y);
-    }
-    if (updates.width !== undefined) {
-      updateFields.push(`width = $${values.length + 1}`);
-      values.push(updates.width);
-    }
-    if (updates.height !== undefined) {
-      updateFields.push(`height = $${values.length + 1}`);
-      values.push(updates.height);
-    }
-    if (updates.rotation !== undefined) {
-      updateFields.push(`rotation = $${values.length + 1}`);
-      values.push(updates.rotation);
-    }
-    if (updates.z_index !== undefined) {
-      updateFields.push(`z_index = $${values.length + 1}`);
-      values.push(updates.z_index);
-    }
-    if (updates.content !== undefined) {
-      updateFields.push(`content = $${values.length + 1}`);
-      values.push(JSON.stringify(updates.content));
+    if (!hasAnyUpdate) {
+      return NextResponse.json({ error: "No updates provided" }, { status: 400 });
     }
 
-    if (updateFields.length === 0) {
-      return NextResponse.json(
-        { error: "No updates provided" },
-        { status: 400 }
-      );
-    }
+    const positionX = updates.position_x ?? null;
+    const positionY = updates.position_y ?? null;
+    const width = updates.width ?? null;
+    const height = updates.height ?? null;
+    const rotation = updates.rotation ?? null;
+    const zIndex = updates.z_index ?? null;
+    const contentJson = updates.content !== undefined ? JSON.stringify(updates.content) : null;
 
-    values.push(itemId);
-    values.push(params.id);
-
-    const query = `
+    const [item] = await sql`
       UPDATE board_items
-      SET ${updateFields.join(", ")}, updated_at = NOW()
-      WHERE id = $${values.length - 1} AND board_id = $${values.length}
+      SET
+        position_x = COALESCE(${positionX}, position_x),
+        position_y = COALESCE(${positionY}, position_y),
+        width = COALESCE(${width}, width),
+        height = COALESCE(${height}, height),
+        rotation = COALESCE(${rotation}, rotation),
+        z_index = COALESCE(${zIndex}, z_index),
+        content = COALESCE(${contentJson}::jsonb, content),
+        updated_at = NOW()
+      WHERE id = ${itemId} AND board_id = ${params.id}
       RETURNING *
     `;
-
-    const [item] = await sql.unsafe(query, values);
 
     if (!item) {
       return NextResponse.json(

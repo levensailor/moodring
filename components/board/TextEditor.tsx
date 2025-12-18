@@ -8,10 +8,8 @@ import {
   Italic,
   Underline,
   Strikethrough,
-  Type,
 } from "lucide-react";
 import { BoardItem, UpdateBoardItemInput } from "@/types";
-import { cn } from "@/lib/utils";
 
 interface TextEditorProps {
   item: BoardItem;
@@ -67,6 +65,8 @@ export function TextEditor({
     };
     onUpdate(updates);
   }, [
+    content,
+    onUpdate,
     text,
     fontSize,
     fontFamily,
@@ -76,6 +76,16 @@ export function TextEditor({
     underline,
     strikethrough,
   ]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
 
   return (
     <div

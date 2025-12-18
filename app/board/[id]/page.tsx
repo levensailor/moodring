@@ -80,12 +80,15 @@ export default function BoardPage() {
     debounce((itemId: string, updates: any) => {
       updateItemMutation.mutate({ itemId, updates });
     }, 500),
-    [boardId]
+    [updateItemMutation]
   );
 
-  const handleUpdateItem = (itemId: string, updates: any) => {
-    debouncedUpdate(itemId, updates);
-  };
+  const handleUpdateItem = useCallback(
+    (itemId: string, updates: any) => {
+      debouncedUpdate(itemId, updates);
+    },
+    [debouncedUpdate]
+  );
 
   const createItemMutation = useMutation({
     mutationFn: async (data: CreateBoardItemInput) => {
