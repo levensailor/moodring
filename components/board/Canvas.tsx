@@ -1,10 +1,22 @@
 "use client";
 
+// #region agent log
+typeof window !== 'undefined' && fetch('http://127.0.0.1:7243/ingest/bf7a940b-ce5c-4f62-a6a1-89abf5ceb79b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Canvas.tsx:4',message:'Importing react-konva',data:{env:typeof window!=='undefined'?'browser':'server',userAgent:typeof navigator!=='undefined'?navigator.userAgent:'none'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+// #endregion
 import { useRef, useEffect, useState } from "react";
+// #region agent log
+typeof window !== 'undefined' && fetch('http://127.0.0.1:7243/ingest/bf7a940b-ce5c-4f62-a6a1-89abf5ceb79b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Canvas.tsx:6',message:'About to import react-konva',data:{env:typeof window!=='undefined'?'browser':'server'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+// #endregion
 import { Stage, Layer, Transformer } from "react-konva";
+// #region agent log
+typeof window !== 'undefined' && fetch('http://127.0.0.1:7243/ingest/bf7a940b-ce5c-4f62-a6a1-89abf5ceb79b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Canvas.tsx:8',message:'About to import Konva',data:{env:typeof window!=='undefined'?'browser':'server'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+// #endregion
 import { BoardItem } from "@/types";
 import { CanvasObject } from "./CanvasObject";
 import Konva from "konva";
+// #region agent log
+typeof window !== 'undefined' && fetch('http://127.0.0.1:7243/ingest/bf7a940b-ce5c-4f62-a6a1-89abf5ceb79b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Canvas.tsx:11',message:'Imports completed',data:{env:typeof window!=='undefined'?'browser':'server',konvaType:typeof Konva},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+// #endregion
 
 interface CanvasProps {
   width: number;
