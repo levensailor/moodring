@@ -29,11 +29,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // #region agent log
+    console.info("[moodring][api/images] upload request", {
+      hasBlobToken: !!process.env.BLOB_READ_WRITE_TOKEN,
+      fileType: file.type,
+      fileSize: file.size,
+      fileName: file.name || "",
+    });
+    // #endregion
+
     const url = await uploadImage(file);
 
     return NextResponse.json({ url });
   } catch (error) {
-    console.error("Error uploading image:", error);
+    const code = (error as any)?.code;
+    const message = (error as any)?.message;
+    console.error("[moodring][api/images] Error uploading image", {
+      code,
+      message,
+      name: (error as any)?.name,
+    });
+
+    if (code === "BLOB_TOKEN_MISSING") {
+      return NextResponse.json(
+        { error: "Blob storage is not configured (missing BLOB_READ_WRITE_TOKEN)" },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Failed to upload image" },
       { status: 500 }
