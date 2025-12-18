@@ -32,9 +32,9 @@ interface ToolbarProps {
   onAddArrow: () => void;
   onAddSubboard: (boardId: string) => void;
   onBackgroundChange: (updates: {
-    color?: string;
-    transparency?: number;
-    wallpaper?: string | null;
+    background_color?: string;
+    background_transparency?: number;
+    background_wallpaper?: string | null;
   }) => void;
 }
 
@@ -376,9 +376,9 @@ function BackgroundSettings({
 
   const handleSave = () => {
     onUpdate({
-      color,
-      transparency,
-      wallpaper,
+      background_color: color,
+      background_transparency: transparency,
+      background_wallpaper: wallpaper,
     });
   };
 
