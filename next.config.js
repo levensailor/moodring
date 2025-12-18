@@ -9,10 +9,6 @@ const nextConfig = {
     ],
   },
   webpack: (config, { isServer }) => {
-    // #region agent log
-    console.log('[DEBUG] Webpack config - isServer:', isServer);
-    // #endregion
-    
     // Prevent Konva from trying to use Node.js canvas package during build
     // Konva checks for canvas during module resolution, causing build errors
     if (isServer) {

@@ -6,10 +6,6 @@ import { BoardItem } from "@/types";
 import { CanvasObject } from "./CanvasObject";
 import Konva from "konva";
 
-// #region agent log
-typeof window !== 'undefined' && fetch('http://127.0.0.1:7243/ingest/bf7a940b-ce5c-4f62-a6a1-89abf5ceb79b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Canvas.tsx:8',message:'All imports completed',data:{env:typeof window!=='undefined'?'browser':'server',konvaType:typeof Konva,Stage:typeof Stage},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-// #endregion
-
 interface CanvasProps {
   width: number;
   height: number;
