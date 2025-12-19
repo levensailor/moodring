@@ -119,6 +119,7 @@ export function Canvas({
       if (files && files.length > 0) {
         const imageFile = Array.from(files).find((f) => f.type.startsWith("image/"));
         if (imageFile) {
+          e.preventDefault();
           onPasteImageFile(imageFile, pointerPos.x, pointerPos.y);
           return;
         }
@@ -130,6 +131,7 @@ export function Canvas({
           if (item.type.indexOf("image") !== -1) {
             const file = item.getAsFile();
             if (file) {
+              e.preventDefault();
               onPasteImageFile(file, pointerPos.x, pointerPos.y);
             }
             return;
@@ -151,13 +153,9 @@ export function Canvas({
 
     // Attach to document so paste works even when no specific element is focused.
     document.addEventListener("paste", handlePaste);
-    // Also attach to the container when possible.
-    const el = containerRef.current;
-    if (el) el.addEventListener("paste", handlePaste as any);
 
     return () => {
       document.removeEventListener("paste", handlePaste);
-      if (el) el.removeEventListener("paste", handlePaste as any);
     };
   }, [onPasteImageFile, onPasteLink]);
 

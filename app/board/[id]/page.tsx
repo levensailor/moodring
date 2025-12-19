@@ -24,8 +24,8 @@ export default function BoardPage() {
   // Fetch board
   const { data: board } = useQuery<Board>({
     queryKey: ["board", boardId],
-    queryFn: async () => {
-      const response = await fetch(`/api/boards/${boardId}`);
+    queryFn: async ({ signal }) => {
+      const response = await fetch(`/api/boards/${boardId}`, { signal });
       if (!response.ok) throw new Error("Failed to fetch board");
       return response.json();
     },
@@ -34,11 +34,13 @@ export default function BoardPage() {
   // Fetch board items
   const { data: items = [] } = useQuery<BoardItem[]>({
     queryKey: ["board-items", boardId],
-    queryFn: async () => {
-      const response = await fetch(`/api/boards/${boardId}/items`);
+    queryFn: async ({ signal }) => {
+      const response = await fetch(`/api/boards/${boardId}/items`, { signal });
       if (!response.ok) throw new Error("Failed to fetch board items");
       return response.json();
     },
+    // Keeps the optimistic preview stable while uploading
+    refetchOnWindowFocus: false,
   });
 
   // Update canvas size on mount and resize
