@@ -196,8 +196,12 @@ export default function BoardPage() {
   };
 
   const handlePasteImageFile = async (file: File, x: number, y: number) => {
+    // Prevent in-flight fetches from overwriting our optimistic preview
+    await queryClient.cancelQueries({ queryKey: ["board-items", boardId] });
+
     const previewUrl = URL.createObjectURL(file);
     const tempId = `temp-photo-${Date.now()}`;
+    const t0 = performance.now();
 
     // Optimistically add a local preview item immediately
     queryClient.setQueryData(["board-items", boardId], (old: any) => {
@@ -216,11 +220,21 @@ export default function BoardPage() {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
-      return [...arr, tempItem];
+      return [...arr.filter((it: any) => it?.id !== tempId), tempItem];
     });
 
     try {
-      const url = await uploadImageMutation.mutateAsync(file);
+      const uploadFile = await maybeDownscaleImageFile(file);
+      // #region agent log
+      console.info("[moodring][paste][optimistic]", {
+        tempId,
+        originalBytes: file.size,
+        uploadBytes: uploadFile.size,
+        uploadType: uploadFile.type,
+      });
+      // #endregion
+
+      const url = await uploadImageMutation.mutateAsync(uploadFile);
       const created = await createItemMutation.mutateAsync({
         board_id: boardId,
         type: "photo",
@@ -231,11 +245,25 @@ export default function BoardPage() {
         height: 200,
       });
 
-      // Replace temp item with real item
+      // Replace temp item with real item (and dedupe defensively)
       queryClient.setQueryData(["board-items", boardId], (old: any) => {
         const arr = Array.isArray(old) ? old : [];
-        return arr.map((it: any) => (it.id === tempId ? created : it));
+        const withoutTemp = arr.filter((it: any) => it?.id !== tempId);
+        const withoutCreated = withoutTemp.filter((it: any) => it?.id !== created?.id);
+        return [...withoutCreated, created];
       });
+
+      // Only revoke preview after the temp item is removed/replaced.
+      try {
+        URL.revokeObjectURL(previewUrl);
+      } catch {}
+
+      // #region agent log
+      console.info("[moodring][paste][timing]", {
+        tempId,
+        msTotal: Math.round(performance.now() - t0),
+      });
+      // #endregion
     } catch (err: any) {
       console.error("[moodring][paste] image upload failed", err?.message || err);
       // Mark optimistic item as failed (still visible)
@@ -248,11 +276,44 @@ export default function BoardPage() {
         );
       });
     } finally {
-      try {
-        URL.revokeObjectURL(previewUrl);
-      } catch {}
+      // Keep preview URL on failure so the user can still see what they pasted.
     }
   };
+
+async function maybeDownscaleImageFile(file: File): Promise<File> {
+  // Downscale large images to speed uploads (best-effort).
+  try {
+    const maxDim = 1600;
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+    if (scale >= 1) return file;
+
+    const targetW = Math.max(1, Math.round(bitmap.width * scale));
+    const targetH = Math.max(1, Math.round(bitmap.height * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = targetW;
+    canvas.height = targetH;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+
+    ctx.drawImage(bitmap, 0, 0, targetW, targetH);
+
+    const mime = "image/webp";
+    const blob: Blob = await new Promise((resolve) =>
+      canvas.toBlob((b) => resolve(b || file), mime, 0.82)
+    );
+
+    const name =
+      file.name && file.name.trim().length > 0
+        ? file.name.replace(/\.(png|jpg|jpeg|webp)$/i, ".webp")
+        : `paste-${Date.now()}.webp`;
+
+    return new File([blob], name, { type: blob.type || mime });
+  } catch {
+    return file;
+  }
+}
 
   const handlePasteLink = async (url: string, x: number, y: number) => {
     // Fetch link preview
