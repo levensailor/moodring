@@ -20,12 +20,13 @@ export default function BoardPage() {
     null
   );
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  const [localItems, setLocalItems] = useState<BoardItem[]>([]);
 
   // Fetch board
   const { data: board } = useQuery<Board>({
     queryKey: ["board", boardId],
-    queryFn: async ({ signal }) => {
-      const response = await fetch(`/api/boards/${boardId}`, { signal });
+    queryFn: async () => {
+      const response = await fetch(`/api/boards/${boardId}`);
       if (!response.ok) throw new Error("Failed to fetch board");
       return response.json();
     },
@@ -34,13 +35,11 @@ export default function BoardPage() {
   // Fetch board items
   const { data: items = [] } = useQuery<BoardItem[]>({
     queryKey: ["board-items", boardId],
-    queryFn: async ({ signal }) => {
-      const response = await fetch(`/api/boards/${boardId}/items`, { signal });
+    queryFn: async () => {
+      const response = await fetch(`/api/boards/${boardId}/items`);
       if (!response.ok) throw new Error("Failed to fetch board items");
       return response.json();
     },
-    // Keeps the optimistic preview stable while uploading
-    refetchOnWindowFocus: false,
   });
 
   // Update canvas size on mount and resize
@@ -116,9 +115,7 @@ export default function BoardPage() {
         body: formData,
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data?.error || "Failed to upload image");
-      }
+      if (!response.ok) throw new Error(data?.error || "Failed to upload image");
       if (!data?.url) throw new Error("Upload succeeded but no url returned");
       return data.url as string;
     },
@@ -155,7 +152,12 @@ export default function BoardPage() {
       if (shouldIgnoreKey()) return;
 
       e.preventDefault();
-      deleteItemMutation.mutate(selectedItemId);
+      // If it's a local-only item, delete locally without hitting the API.
+      if (selectedItemId.startsWith("local-photo-")) {
+        setLocalItems((prev) => prev.filter((it) => it.id !== selectedItemId));
+      } else {
+        deleteItemMutation.mutate(selectedItemId);
+      }
       setSelectedItemId(null);
       setEditingTextItemId(null);
     };
@@ -198,43 +200,32 @@ export default function BoardPage() {
   };
 
   const handlePasteImageFile = async (file: File, x: number, y: number) => {
-    // Prevent in-flight fetches from overwriting our optimistic preview
-    await queryClient.cancelQueries({ queryKey: ["board-items", boardId] });
-
     const previewUrl = URL.createObjectURL(file);
-    const tempId = `temp-photo-${Date.now()}`;
-    const t0 = performance.now();
+    const tempId = `local-photo-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const createdAt = new Date();
 
-    // Optimistically add a local preview item immediately
-    queryClient.setQueryData(["board-items", boardId], (old: any) => {
-      const arr = Array.isArray(old) ? old : [];
-      const tempItem: any = {
-        id: tempId,
-        board_id: boardId,
-        type: "photo",
-        content: { url: previewUrl, isUploading: true },
-        position_x: x - 100,
-        position_y: y - 100,
-        width: 200,
-        height: 200,
-        rotation: 0,
-        z_index: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      return [...arr.filter((it: any) => it?.id !== tempId), tempItem];
-    });
+    const local: BoardItem = {
+      id: tempId,
+      board_id: boardId,
+      type: "photo",
+      content: { url: previewUrl, isUploading: true, localOnly: true },
+      position_x: x - 100,
+      position_y: y - 100,
+      width: 200,
+      height: 200,
+      rotation: 0,
+      z_index: 0,
+      created_at: createdAt as any,
+      updated_at: createdAt as any,
+    };
+
+    // Runtime evidence: confirm that preview is inserted immediately
+    console.info("[moodring][paste][preview-added]", { tempId, bytes: file.size, type: file.type });
+    setLocalItems((prev) => [...prev, local]);
 
     try {
       const uploadFile = await maybeDownscaleImageFile(file);
-      // #region agent log
-      console.info("[moodring][paste][optimistic]", {
-        tempId,
-        originalBytes: file.size,
-        uploadBytes: uploadFile.size,
-        uploadType: uploadFile.type,
-      });
-      // #endregion
+      console.info("[moodring][paste][upload-start]", { tempId, uploadBytes: uploadFile.size, uploadType: uploadFile.type });
 
       const url = await uploadImageMutation.mutateAsync(uploadFile);
       const created = await createItemMutation.mutateAsync({
@@ -247,75 +238,60 @@ export default function BoardPage() {
         height: 200,
       });
 
-      // Replace temp item with real item (and dedupe defensively)
-      queryClient.setQueryData(["board-items", boardId], (old: any) => {
-        const arr = Array.isArray(old) ? old : [];
-        const withoutTemp = arr.filter((it: any) => it?.id !== tempId);
-        const withoutCreated = withoutTemp.filter((it: any) => it?.id !== created?.id);
-        return [...withoutCreated, created];
-      });
-
-      // Only revoke preview after the temp item is removed/replaced.
+      // Remove local preview (server item will appear from DB query)
+      setLocalItems((prev) => prev.filter((it) => it.id !== tempId));
       try {
         URL.revokeObjectURL(previewUrl);
       } catch {}
 
-      // #region agent log
-      console.info("[moodring][paste][timing]", {
-        tempId,
-        msTotal: Math.round(performance.now() - t0),
-      });
-      // #endregion
+      // Ensure server list is up to date (and avoid duplicates)
+      queryClient.invalidateQueries({ queryKey: ["board-items", boardId] });
+      console.info("[moodring][paste][upload-done]", { tempId, createdId: created?.id });
     } catch (err: any) {
-      console.error("[moodring][paste] image upload failed", err?.message || err);
-      // Mark optimistic item as failed (still visible)
-      queryClient.setQueryData(["board-items", boardId], (old: any) => {
-        const arr = Array.isArray(old) ? old : [];
-        return arr.map((it: any) =>
+      console.error("[moodring][paste][upload-failed]", { tempId, message: err?.message || String(err) });
+      // Keep preview visible but mark as failed
+      setLocalItems((prev) =>
+        prev.map((it) =>
           it.id === tempId
             ? { ...it, content: { ...it.content, isUploading: false, error: true } }
             : it
-        );
-      });
-    } finally {
-      // Keep preview URL on failure so the user can still see what they pasted.
+        )
+      );
+      // Keep preview URL so user can still see what they pasted
     }
   };
 
-async function maybeDownscaleImageFile(file: File): Promise<File> {
-  // Downscale large images to speed uploads (best-effort).
-  try {
-    const maxDim = 1600;
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
-    if (scale >= 1) return file;
+  async function maybeDownscaleImageFile(file: File): Promise<File> {
+    try {
+      const maxDim = 1600;
+      const bitmap = await createImageBitmap(file);
+      const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+      if (scale >= 1) return file;
 
-    const targetW = Math.max(1, Math.round(bitmap.width * scale));
-    const targetH = Math.max(1, Math.round(bitmap.height * scale));
+      const targetW = Math.max(1, Math.round(bitmap.width * scale));
+      const targetH = Math.max(1, Math.round(bitmap.height * scale));
 
-    const canvas = document.createElement("canvas");
-    canvas.width = targetW;
-    canvas.height = targetH;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return file;
+      const c = document.createElement("canvas");
+      c.width = targetW;
+      c.height = targetH;
+      const ctx = c.getContext("2d");
+      if (!ctx) return file;
+      ctx.drawImage(bitmap, 0, 0, targetW, targetH);
 
-    ctx.drawImage(bitmap, 0, 0, targetW, targetH);
+      const blob: Blob = await new Promise((resolve) =>
+        c.toBlob((b) => resolve(b || file), "image/webp", 0.82)
+      );
 
-    const mime = "image/webp";
-    const blob: Blob = await new Promise((resolve) =>
-      canvas.toBlob((b) => resolve(b || file), mime, 0.82)
-    );
+      const name =
+        file.name && file.name.trim().length > 0
+          ? file.name.replace(/\.(png|jpg|jpeg|webp)$/i, ".webp")
+          : `paste-${Date.now()}.webp`;
 
-    const name =
-      file.name && file.name.trim().length > 0
-        ? file.name.replace(/\.(png|jpg|jpeg|webp)$/i, ".webp")
-        : `paste-${Date.now()}.webp`;
-
-    return new File([blob], name, { type: blob.type || mime });
-  } catch {
-    return file;
+      return new File([blob], name, { type: blob.type || "image/webp" });
+    } catch {
+      return file;
+    }
   }
-}
 
   const handlePasteLink = async (url: string, x: number, y: number) => {
     // Fetch link preview
@@ -457,7 +433,8 @@ async function maybeDownscaleImageFile(file: File): Promise<File> {
     );
   }
 
-  const editingItem = items.find((item) => item.id === editingTextItemId);
+  const mergedItems = [...items, ...localItems];
+  const editingItem = mergedItems.find((item) => item.id === editingTextItemId);
   const editingPosition = editingItem
     ? {
         x: editingItem.position_x,
@@ -470,7 +447,7 @@ async function maybeDownscaleImageFile(file: File): Promise<File> {
       <Canvas
         width={canvasSize.width}
         height={canvasSize.height}
-        items={items}
+        items={mergedItems}
         selectedItemId={selectedItemId}
         onSelectItem={(id) => {
           setSelectedItemId(id);

@@ -41,6 +41,7 @@ export function Canvas({
   const stageRef = useRef<Konva.Stage>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const lastPasteRef = useRef<number>(0);
 
   // #region agent log
   useEffect(() => {
@@ -77,6 +78,11 @@ export function Canvas({
   // Handle paste events
   useEffect(() => {
     const handlePaste = async (e: ClipboardEvent) => {
+      // Deduplicate: sometimes paste can fire twice (or we can pick up both files+items)
+      const now = Date.now();
+      if (now - lastPasteRef.current < 250) return;
+      lastPasteRef.current = now;
+
       const stage = stageRef.current;
       if (!stage) return;
 
@@ -120,6 +126,7 @@ export function Canvas({
         const imageFile = Array.from(files).find((f) => f.type.startsWith("image/"));
         if (imageFile) {
           e.preventDefault();
+          e.stopPropagation();
           onPasteImageFile(imageFile, pointerPos.x, pointerPos.y);
           return;
         }
@@ -132,6 +139,7 @@ export function Canvas({
             const file = item.getAsFile();
             if (file) {
               e.preventDefault();
+              e.stopPropagation();
               onPasteImageFile(file, pointerPos.x, pointerPos.y);
             }
             return;
@@ -153,7 +161,6 @@ export function Canvas({
 
     // Attach to document so paste works even when no specific element is focused.
     document.addEventListener("paste", handlePaste);
-
     return () => {
       document.removeEventListener("paste", handlePaste);
     };
