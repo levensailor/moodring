@@ -15,6 +15,7 @@ interface CanvasProps {
   onUpdateItem: (id: string, updates: any) => void;
   onAddText: (x: number, y: number) => void;
   onPasteImage: (url: string, x: number, y: number) => void;
+  onPasteImageFile: (file: File, x: number, y: number) => void;
   onPasteLink: (url: string, x: number, y: number) => void;
   background: {
     color: string;
@@ -32,6 +33,7 @@ export function Canvas({
   onUpdateItem,
   onAddText,
   onPasteImage,
+  onPasteImageFile,
   onPasteLink,
   background,
 }: CanvasProps) {
@@ -117,45 +119,7 @@ export function Canvas({
       if (files && files.length > 0) {
         const imageFile = Array.from(files).find((f) => f.type.startsWith("image/"));
         if (imageFile) {
-          const formData = new FormData();
-          formData.append("file", imageFile);
-          try {
-            const response = await fetch("/api/images", {
-              method: "POST",
-              body: formData,
-            });
-            const data = await response.json().catch(() => ({}));
-            // #region agent log
-            shouldIngest &&
-              fetch("http://127.0.0.1:7243/ingest/bf7a940b-ce5c-4f62-a6a1-89abf5ceb79b", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  sessionId: "debug-session",
-                  runId: "paste-run1",
-                  hypothesisId: "P2",
-                  location: "Canvas.tsx:pasteFiles",
-                  message: "upload response",
-                  data: {
-                    status: response.status,
-                    ok: response.ok,
-                    hasUrl: !!data?.url,
-                    fileType: imageFile.type,
-                    fileName: imageFile.name || "",
-                  },
-                  timestamp: Date.now(),
-                }),
-              }).catch(() => {});
-            console.info("[moodring][paste][upload]", { status: response.status, ok: response.ok, hasUrl: !!data?.url, fileType: imageFile.type, fileName: imageFile.name || "" });
-            // #endregion
-            if (data.url) {
-              onPasteImage(data.url, pointerPos.x, pointerPos.y);
-            } else {
-              console.error("[moodring][paste] upload succeeded but no url returned", data);
-            }
-          } catch (error) {
-            console.error("Failed to upload image:", error);
-          }
+          onPasteImageFile(imageFile, pointerPos.x, pointerPos.y);
           return;
         }
       }
@@ -166,45 +130,7 @@ export function Canvas({
           if (item.type.indexOf("image") !== -1) {
             const file = item.getAsFile();
             if (file) {
-              const formData = new FormData();
-              formData.append("file", file);
-              try {
-                const response = await fetch("/api/images", {
-                  method: "POST",
-                  body: formData,
-                });
-                const data = await response.json().catch(() => ({}));
-                // #region agent log
-                shouldIngest &&
-                  fetch("http://127.0.0.1:7243/ingest/bf7a940b-ce5c-4f62-a6a1-89abf5ceb79b", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      sessionId: "debug-session",
-                      runId: "paste-run1",
-                      hypothesisId: "P3",
-                      location: "Canvas.tsx:pasteItems",
-                      message: "upload response",
-                      data: {
-                        status: response.status,
-                        ok: response.ok,
-                        hasUrl: !!data?.url,
-                        fileType: file.type,
-                        fileName: file.name || "",
-                      },
-                      timestamp: Date.now(),
-                    }),
-                  }).catch(() => {});
-                console.info("[moodring][paste][upload]", { status: response.status, ok: response.ok, hasUrl: !!data?.url, fileType: file.type, fileName: file.name || "" });
-                // #endregion
-                if (data.url) {
-                  onPasteImage(data.url, pointerPos.x, pointerPos.y);
-                } else {
-                  console.error("[moodring][paste] upload succeeded but no url returned", data);
-                }
-              } catch (error) {
-                console.error("Failed to upload image:", error);
-              }
+              onPasteImageFile(file, pointerPos.x, pointerPos.y);
             }
             return;
           }
@@ -233,7 +159,7 @@ export function Canvas({
       document.removeEventListener("paste", handlePaste);
       if (el) el.removeEventListener("paste", handlePaste as any);
     };
-  }, [onPasteImage, onPasteLink]);
+  }, [onPasteImageFile, onPasteLink]);
 
   // Handle double click for text
   const handleStageDoubleClick = (e: Konva.KonvaEventObject<MouseEvent>) => {

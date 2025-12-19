@@ -105,6 +105,23 @@ export default function BoardPage() {
     },
   });
 
+  const uploadImageMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch("/api/images", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.error || "Failed to upload image");
+      }
+      if (!data?.url) throw new Error("Upload succeeded but no url returned");
+      return data.url as string;
+    },
+  });
+
   const deleteItemMutation = useMutation({
     mutationFn: async (itemId: string) => {
       const response = await fetch(`/api/boards/${boardId}/items`, {
@@ -176,6 +193,65 @@ export default function BoardPage() {
       width: 200,
       height: 200,
     });
+  };
+
+  const handlePasteImageFile = async (file: File, x: number, y: number) => {
+    const previewUrl = URL.createObjectURL(file);
+    const tempId = `temp-photo-${Date.now()}`;
+
+    // Optimistically add a local preview item immediately
+    queryClient.setQueryData(["board-items", boardId], (old: any) => {
+      const arr = Array.isArray(old) ? old : [];
+      const tempItem: any = {
+        id: tempId,
+        board_id: boardId,
+        type: "photo",
+        content: { url: previewUrl, isUploading: true },
+        position_x: x - 100,
+        position_y: y - 100,
+        width: 200,
+        height: 200,
+        rotation: 0,
+        z_index: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      return [...arr, tempItem];
+    });
+
+    try {
+      const url = await uploadImageMutation.mutateAsync(file);
+      const created = await createItemMutation.mutateAsync({
+        board_id: boardId,
+        type: "photo",
+        content: { url },
+        position_x: x - 100,
+        position_y: y - 100,
+        width: 200,
+        height: 200,
+      });
+
+      // Replace temp item with real item
+      queryClient.setQueryData(["board-items", boardId], (old: any) => {
+        const arr = Array.isArray(old) ? old : [];
+        return arr.map((it: any) => (it.id === tempId ? created : it));
+      });
+    } catch (err: any) {
+      console.error("[moodring][paste] image upload failed", err?.message || err);
+      // Mark optimistic item as failed (still visible)
+      queryClient.setQueryData(["board-items", boardId], (old: any) => {
+        const arr = Array.isArray(old) ? old : [];
+        return arr.map((it: any) =>
+          it.id === tempId
+            ? { ...it, content: { ...it.content, isUploading: false, error: true } }
+            : it
+        );
+      });
+    } finally {
+      try {
+        URL.revokeObjectURL(previewUrl);
+      } catch {}
+    }
   };
 
   const handlePasteLink = async (url: string, x: number, y: number) => {
@@ -344,6 +420,7 @@ export default function BoardPage() {
         onUpdateItem={handleUpdateItem}
         onAddText={handleAddText}
         onPasteImage={handlePasteImage}
+        onPasteImageFile={handlePasteImageFile}
         onPasteLink={handlePasteLink}
         background={{
           color: board.background_color,

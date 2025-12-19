@@ -107,14 +107,69 @@ export function CanvasObject({
 }
 
 function PhotoObject({ item }: { item: BoardItem }) {
-  const [image] = useImage(item.content.url || "");
+  const url = item.content.url || "";
+  const [image] = useImage(url, "anonymous");
+  const isUploading = !!item.content.isUploading;
+  const isError = !!item.content.error;
+
   return (
-    <Image
-      image={image}
-      width={item.width}
-      height={item.height}
-      cornerRadius={item.content.cornerRadius || 0}
-    />
+    <Group>
+      {image ? (
+        <Image
+          image={image}
+          width={item.width}
+          height={item.height}
+          cornerRadius={item.content.cornerRadius || 0}
+        />
+      ) : (
+        <Rect
+          width={item.width}
+          height={item.height}
+          fill="#e2e8f0"
+          cornerRadius={item.content.cornerRadius || 0}
+        />
+      )}
+
+      {isUploading && (
+        <Group>
+          <Rect
+            width={item.width}
+            height={item.height}
+            fill="rgba(15,23,42,0.12)"
+            cornerRadius={item.content.cornerRadius || 0}
+          />
+          <Text
+            text="Uploading…"
+            width={item.width}
+            height={item.height}
+            align="center"
+            verticalAlign="middle"
+            fontSize={14}
+            fill="#0f172a"
+          />
+        </Group>
+      )}
+
+      {isError && (
+        <Group>
+          <Rect
+            width={item.width}
+            height={item.height}
+            fill="rgba(239,68,68,0.10)"
+            cornerRadius={item.content.cornerRadius || 0}
+          />
+          <Text
+            text="Upload failed"
+            width={item.width}
+            height={item.height}
+            align="center"
+            verticalAlign="middle"
+            fontSize={14}
+            fill="#b91c1c"
+          />
+        </Group>
+      )}
+    </Group>
   );
 }
 
